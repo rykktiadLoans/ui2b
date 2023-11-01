@@ -1,4 +1,4 @@
-import json 
+import json, random
 
 class Treasure:
     def __init__(self, x, y):
@@ -17,6 +17,7 @@ class Field:
             self.treasure.append(Treasure(i["x"], i["y"]))
         self.treasureCount = len(self.treasure)
         self.currentTreasure = 0
+        self.steps = 0
 
 
     def print(self):
@@ -66,6 +67,7 @@ class Field:
             return False
 
     def treasureCheck(self):
+        self.steps += 1
         for t in self.treasure:
             if(t.x == self.playerx and t.y == self.playery):
                 self.treasure.remove(t)
@@ -85,16 +87,15 @@ class Field:
         return val
 
 class Machine:
-    def __init__(self, field):
-        self.field = field
+    def __init__(self):
         self.instructions = ["00000000" for x in range(64)]
         self.current = 0
         self.total = 0
+        self.output = ""
         self.state = "a" # a-active d-done f-fail
     def next(self):
         if(self.state == "d" or self.state == "f"):
             return False
-        full = self.instructions[self.current]
         adress = self.instructions[self.current][2:]
         action = self.instructions[self.current][:2]
         if(action == "00"):
@@ -123,20 +124,15 @@ class Machine:
             # 1 2
             #  3
             n = int(adress[-2:], 2)
-            success = False 
             if(n == 0):
-                success = field.up()
+                self.output += "H"
             if(n == 1):
-                success = field.left()
+                self.output += "L"
             if(n == 2):
-                success = field.right()
+                self.output += "P"
             if(n == 3):
-                success = field.down()
-            if(success):
-                self.current+= 1
-            else:
-                self.state = "f"
-                return False
+                self.output += "D"
+            self.current+= 1
         if(self.current > 63):
             self.state = "f"
             return False
@@ -144,33 +140,50 @@ class Machine:
         if(self.total >= 500):
             self.state = "f"
             return False
-        if(len(self.field.treasure) == 0):
-            self.state = "d"
-            return True
         return True
 
+def initInstructions(machine):
+    count = 16
+    for i in range(count):
+        out = ""
+        for j in range(8):
+            out += str(random.randint(0, 1))
+        machine.instructions[i] = out
+    return machine
 
 
+def calcFitness(field):
+    POINTFOUND = 100 
+    POINTSTEP = -1
+    points = 500
+    points += POINTFOUND * field.currentTreasure + POINTSTEP * field.steps
+    return points
+
+def getOutput(machine):
+    val = True
+    while(val):
+        val = machine.next()
+    return machine.output
+
+def runField(field, output):
+    for i in output:
+        field.smartMoving(i)
+        if(field.currentTreasure == field.treasureCount):
+            return field
+    return field
 
 
-
+POPULATION = 20
 
 filename = "field.json"
 field = Field(filename)
 field.print()
-machine = Machine(field)
-machine.instructions[0] = "10111000"
-machine.instructions[56] = "11000000"
-machine.instructions[57] = "11000000"
-machine.instructions[58] = "11000000"
-machine.instructions[59] = "11000000"
-machine.instructions[60] = "11000000"
-machine.instructions[61] = "11000000"
-machine.instructions[62] = "11000000"
-machine.instructions[63] = "11000000"
-val = True
-while val:
-    print(machine.current)
-    val = machine.next()
-    machine.field.print()
-
+machine = Machine()
+machine = initInstructions(machine)
+fields = [Field(filename) for x in range(POPULATION)]
+machines = [initInstructions(Machine()) for x in range(POPULATION)]
+output = [getOutput(machines[x]) for x in range(POPULATION)]
+runned = [runField(fields[x], output[x]) for x in range(POPULATION)]
+fitnessdickinyourmouth = [calcFitness(runned[x]) for x in range(POPULATION)]
+for i in range(POPULATION):
+    print(runned[i].currentTreasure, ":", runned[i].steps, ":", fitnessdickinyourmouth[i])
