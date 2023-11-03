@@ -265,13 +265,18 @@ def roulette(fitarr: list[Fitness]):
     return output
 
 def tournament(fitarr: list[Fitness]):
-    lists = [[fitarr[x * 3], fitarr[x * 3 + 1], fitarr[x * 3 + 2]] for x in range(int(POPULATION/3))]
-    new = []
-    for i in range(len(lists)):
-        l = lists[i]
-        l.sort(key=lambda x: x.fitness, reverse= True)
-        new.append(l[0])
-    return new
+    lists = []
+    cur = []
+    while(len(fitarr) > 0):
+        i = random.randrange(0, len(fitarr))
+        cur.append(fitarr[i])
+        fitarr.pop(i)
+        if(len(cur) > 2):
+            cur.sort(key=lambda x: x.fitness, reverse=True)
+            lists.append(cur[0])
+            cur = []
+
+    return lists
 
 def construct(fitarr : list[Fitness]):
     fitarr = tournament(fitarr)
