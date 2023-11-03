@@ -294,7 +294,7 @@ def construct(fitarr : list[Fitness]):
 
 
 POPULATION = 90
-MAXMUT = 40 
+MAXMUT = 25
 SELECTSIZE = 30
 
 filename = "field.json"
@@ -315,6 +315,8 @@ while(True):
         found = runned[i].currentTreasure if runned[i].currentTreasure > found else found
     print("Gen", gen, ":", found, "\r", end="")
     gen += 1
+    if(gen > 200):
+        MAXMUT = 45
     for i in runned:
         if(i.currentTreasure == i.treasureCount):
             print("\n")
