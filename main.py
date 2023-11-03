@@ -1,4 +1,4 @@
-import json, random, copy
+import json, random, copy, math
 import sys
 
 class Fitness:
@@ -210,7 +210,7 @@ def mutate(inst: list[str]):
     may = random.randint(0,100)
     if(may > 80):
         return inst
-    available = MAXMUT
+    available = maxmut
     while available > 0:
         sel = (random.randint(0, 99))
         if (sel < 30):
@@ -294,7 +294,7 @@ def construct(fitarr : list[Fitness]):
 
 
 POPULATION = 90
-MAXMUT = 25
+maxmut = 25
 SELECTSIZE = 30
 
 filename = "field.json"
@@ -315,8 +315,7 @@ while(True):
         found = runned[i].currentTreasure if runned[i].currentTreasure > found else found
     print("Gen", gen, ":", found, "\r", end="")
     gen += 1
-    if(gen > 200):
-        MAXMUT = 45
+    #maxmut = 25 + math.floor(gen / 100) * 10
     for i in runned:
         if(i.currentTreasure == i.treasureCount):
             print("\n")
