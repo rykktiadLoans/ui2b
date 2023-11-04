@@ -3,8 +3,8 @@ x = int(input("SizeX: "))
 y = int(input("SizeY: "))
 tc = int(input("TreasureCount: "))
 
-xp = math.ceil(x / 2)
-yp = 0
+xp = random.randrange(0, x)
+yp = random.randrange(0, y)
 ar = []
 setx = set()
 sety = set()

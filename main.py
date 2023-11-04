@@ -196,12 +196,14 @@ def runField(field, output):
 def crossover(in1 : list[str], in2: list[str]):
     output1 = []
     output2 = []
-    l = list(filter(lambda x: x != "00000000", in1))
-    spot = random.randint(0, len(l) -1)
-    output1 += in1[spot:]
-    output2 += in2[spot:]
-    output1 += in2[:spot]
-    output2 += in1[:spot]
+    for i in range(64):
+        choose = random.randrange(0,2)
+        if(choose == 1):
+            output1.append(in1[i])
+            output2.append(in2[i])
+        else:
+            output2.append(in1[i])
+            output1.append(in2[i])
     return [output1, output2]
 
 def mutate(inst: list[str]):
@@ -295,9 +297,9 @@ def construct(fitarr : list[Fitness], selection):
     return maken
 
 
-POPULATION = 90
-maxmut = 25
-SELECTSIZE = 30
+POPULATION = 150
+maxmut = 35
+SELECTSIZE = math.floor(POPULATION  / 3)
 
 filename = "field.json"
 jsonfile = json.load(open(filename, "r"))
