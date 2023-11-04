@@ -298,7 +298,7 @@ def construct(fitarr : list[Fitness], selection):
 
 
 POPULATION = 150
-maxmut = 35
+maxmut = 25
 SELECTSIZE = math.floor(POPULATION  / 3)
 
 filename = "field.json"
