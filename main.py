@@ -207,22 +207,19 @@ def crossover(in1 : list[str], in2: list[str]):
 def mutate(inst: list[str]):
     # add, remove, clear, randomize, switch
     inst = inst
-    may = random.randint(0,100)
-    if(may > 80):
-        return inst
     available = maxmut
     while available > 0:
         sel = (random.randint(0, 99))
         if (sel < 30):
                 output = ""
-                index = inst.index("00000000")
+                index = inst.index("00000000") if "00000000" in inst else -1
                 if(index == -1):
                     continue
                 for i in range(8):
                     output += str(random.randint(0,1))
                 inst[index] = output
                 available -= 5 
-        if (sel < 50):
+        elif (sel < 50):
                 index = random.randint(0,63)
                 inst.pop(index)
                 inst.append("00000000")
@@ -278,8 +275,8 @@ def tournament(fitarr: list[Fitness]):
 
     return lists
 
-def construct(fitarr : list[Fitness]):
-    fitarr = tournament(fitarr)
+def construct(fitarr : list[Fitness], selection):
+    fitarr = selection(fitarr)
     instr = [x.instructions for x in fitarr]
     newinstr = []
     while(len(newinstr) < POPULATION):
@@ -308,6 +305,8 @@ machine = Machine()
 machine = initInstructions(machine)
 machines = [initInstructions(Machine()) for x in range(POPULATION)]
 gen = 0
+Field(jsonfile).print()
+print("Genereation number : Maximum treasures found")
 while(True):
     fields = [Field(jsonfile) for x in range(POPULATION)]
     instr = [copy.deepcopy(x.instructions) for x in machines]
@@ -326,9 +325,12 @@ while(True):
             print("\n")
             print("FOUND")
             sys.exit(0)
-
+    
+    sel = roulette 
+    if(gen > 200):
+        sel = tournament
     fitarr = [Fitness(fitnessdickinyourmouth[x], instr[x]) for x in range(POPULATION)]
-    machines = construct(fitarr)
+    machines = construct(fitarr, sel)
 
 
 
