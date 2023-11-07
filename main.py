@@ -1,6 +1,7 @@
 import json, random, copy, math
 import sys
 
+#class that pairs the fitness value and the instructions together
 class Fitness:
     def __init__(self, fitness, instructions):
         self.fitness = fitness
@@ -193,6 +194,7 @@ def runField(field, output):
             return field
     return field
 
+#make 2 children using uniform crossover
 def crossover(in1 : list[str], in2: list[str]):
     output1 = []
     output2 = []
@@ -206,10 +208,13 @@ def crossover(in1 : list[str], in2: list[str]):
             output1.append(in2[i])
     return [output1, output2]
 
+#mutate the individual
+#mutations available: add, remove, clear, randomize, switch
 def mutate(inst: list[str]):
-    # add, remove, clear, randomize, switch
     inst = inst
     available = maxmut
+    if(random.randrange(0, 100) > mutchance):
+        return inst
     while available > 0:
         sel = (random.randint(0, 99))
         if (sel < 30):
@@ -248,6 +253,7 @@ def mutate(inst: list[str]):
                 available -= 5
     return inst
 
+#roulette selection
 def roulette(fitarr: list[Fitness]):
     output : list[Fitness]= []
     while(len(output) < SELECTSIZE):
@@ -263,6 +269,7 @@ def roulette(fitarr: list[Fitness]):
         fitarr.remove(fitarr[index])
     return output
 
+#tournament selection
 def tournament(fitarr: list[Fitness]):
     lists = []
     cur = []
@@ -270,18 +277,19 @@ def tournament(fitarr: list[Fitness]):
         i = random.randrange(0, len(fitarr))
         cur.append(fitarr[i])
         fitarr.pop(i)
-        if(len(cur) > 2):
+        if(len(cur) > 1):
             cur.sort(key=lambda x: x.fitness, reverse=True)
             lists.append(cur[0])
             cur = []
 
     return lists
 
+#make the new generation
 def construct(fitarr : list[Fitness], selection):
     fitarr = selection(fitarr)
     instr = [x.instructions for x in fitarr]
     newinstr = []
-    while(len(newinstr) < POPULATION):
+    while(len(newinstr) < population):
         i1 = random.randint(0, SELECTSIZE - 1)
         i2 = random.randint(0, SELECTSIZE - 1)
         while(i2 == i1):
@@ -297,42 +305,55 @@ def construct(fitarr : list[Fitness], selection):
     return maken
 
 
-POPULATION = 150
+population = int(input("Population size: "))
+seltype = input("Selection type ('t' or 'r'): ")
+if(seltype == "t"):
+    seltype = tournament 
+elif(seltype == "r"):
+    seltype = roulette 
+else: 
+    print("WRONG SELECTION TYPE!")
+    sys.exit(1)
+mutchance = int(input("Mutation chance(0 - 100): "))
+maxgen = int(input("Max amount of generations: "))
+#ammount of possible mutations per mutation
 maxmut = 25
-SELECTSIZE = math.floor(POPULATION  / 3)
+SELECTSIZE = math.floor(population  / 3)
+
 
 filename = "field.json"
 jsonfile = json.load(open(filename, "r"))
 machine = Machine()
 machine = initInstructions(machine)
-machines = [initInstructions(Machine()) for x in range(POPULATION)]
+machines = [initInstructions(Machine()) for x in range(population)]
 gen = 0
 Field(jsonfile).print()
 print("Genereation number : Maximum treasures found")
 while(True):
-    fields = [Field(jsonfile) for x in range(POPULATION)]
+    fields = [Field(jsonfile) for x in range(population)]
     instr = [copy.deepcopy(x.instructions) for x in machines]
-    output = [getOutput(machines[x]) for x in range(POPULATION)]
-    runned = [runField(fields[x], output[x]) for x in range(POPULATION)]
-    fitnessdickinyourmouth = [calcFitness(runned[x]) for x in range(POPULATION)]
+    output = [getOutput(machines[x]) for x in range(population)]
+    runned = [runField(fields[x], output[x]) for x in range(population)]
+    fitnesslist = [calcFitness(runned[x]) for x in range(population)]
 
     found = 0 
-    for i in range(POPULATION):
+    for i in range(population):
         found = runned[i].currentTreasure if runned[i].currentTreasure > found else found
     print("Gen", gen, ":", found, "\r", end="")
     gen += 1
-    #maxmut = 25 + math.floor(gen / 100) * 10
+    temp = 0;
     for i in runned:
         if(i.currentTreasure == i.treasureCount):
             print("\n")
             print("FOUND")
+            print(instr[temp])
             sys.exit(0)
-    
-    sel = roulette 
-    if(gen > 200):
-        sel = tournament
-    fitarr = [Fitness(fitnessdickinyourmouth[x], instr[x]) for x in range(POPULATION)]
-    machines = construct(fitarr, sel)
+        temp +=1
+    if(gen > maxgen):
+        print("\nCouldn't make an individual which can collect all the treasures fast enough")
+        sys.exit(1)
+    fitarr = [Fitness(fitnesslist[x], instr[x]) for x in range(population)]
+    machines = construct(fitarr, seltype)
 
 
 
